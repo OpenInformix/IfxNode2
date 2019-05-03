@@ -1,7 +1,13 @@
 {
   "name": "odbc",
   "description": "unixodbc bindings for node",
+<<<<<<< HEAD
+  "version": "1.4.6",
+  "main": "lib/odbc.js",
+  "types": "./lib/odbc.d.ts",
+=======
   "version": "2.0.0-beta.0",
+>>>>>>> 1cdab5a5cce08fe1fe54f8d82c38ce28829cfa97
   "homepage": "http://github.com/wankdanker/node-odbc/",
   "main": "./lib/odbc.js",
   "repository": {
