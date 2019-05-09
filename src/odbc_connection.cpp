@@ -284,9 +284,9 @@ class CreateStatementAsyncWorker : public Napi::AsyncWorker {
 
     void Execute() {
 
-      DEBUG_PRINTF("ODBCConnection::CreateStatementAsyncWorker:Execute - hDBC=%X hDBC=%X\n",
+      DEBUG_PRINTF("ODBCConnection::CreateStatementAsyncWorker:Execute - hDBC=%p hDBC=%p\n",
        odbcConnectionObject->hENV,
-       odbcConnectionObject->hDBC,
+       odbcConnectionObject->hDBC
       );
 
       uv_mutex_lock(&ODBC::g_odbcMutex);
@@ -301,7 +301,7 @@ class CreateStatementAsyncWorker : public Napi::AsyncWorker {
 
     void OnOK() {
 
-      DEBUG_PRINTF("ODBCConnection::CreateStatementAsyncWorker::OnOK - hDBC=%X hDBC=%X hSTMT=%X\n",
+      DEBUG_PRINTF("ODBCConnection::CreateStatementAsyncWorker::OnOK - hDBC=%p hDBC=%p hSTMT=%p\n",
         odbcConnectionObject->hENV,
         odbcConnectionObject->hDBC,
         hSTMT
@@ -385,8 +385,8 @@ class QueryAsyncWorker : public Napi::AsyncWorker {
 
       DEBUG_PRINTF("\nODBCConnection::QueryAsyncWorke::Execute");
 
-      DEBUG_PRINTF("ODBCConnection::Query : sqlLen=%i, sqlSize=%i, sql=%s\n",
-               data->sqlLen, data->sqlSize, (char*)data->sql);
+      // DEBUG_PRINTF("ODBCConnection::Query : sqlLen=%i, sqlSize=%i, sql=%s\n",
+      //          data->sqlLen, data->sqlSize, (char*)data->sql);
 
       // allocate a new statement handle
       uv_mutex_lock(&ODBC::g_odbcMutex);
@@ -629,14 +629,14 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
           switch(data->parameters[i]->ParameterType) {
             case SQL_DECIMAL :
             case SQL_NUMERIC :
-              bufferSize = (data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
+              bufferSize = (SQLSMALLINT) (data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
               data->parameters[i]->ValueType = SQL_C_CHAR;
               data->parameters[i]->ParameterValuePtr = new SQLCHAR[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
               break;
 
             case SQL_DOUBLE :
-              bufferSize = (data->parameters[i]->ColumnSize + data->parameters[i]->ColumnSize);
+              bufferSize = (SQLSMALLINT)(data->parameters[i]->ColumnSize + data->parameters[i]->ColumnSize);
               data->parameters[i]->ValueType = SQL_C_DOUBLE;
               data->parameters[i]->ParameterValuePtr = new SQLDOUBLE[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
@@ -645,7 +645,7 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
             case SQL_INTEGER:
             case SQL_SMALLINT:
             case SQL_BIGINT:
-              bufferSize = (data->parameters[i]->ColumnSize + data->parameters[i]->ColumnSize);
+              bufferSize = (SQLSMALLINT)(data->parameters[i]->ColumnSize + data->parameters[i]->ColumnSize);
               data->parameters[i]->ValueType = SQL_C_SBIGINT;
               data->parameters[i]->ParameterValuePtr = new SQLBIGINT[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
@@ -654,7 +654,7 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
             case SQL_BINARY:
             case SQL_VARBINARY:
             case SQL_LONGVARBINARY:
-              bufferSize = (data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
+              bufferSize = (SQLSMALLINT)(data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
               data->parameters[i]->ValueType = SQL_C_CHAR;
               data->parameters[i]->ParameterValuePtr = new SQLCHAR[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
@@ -663,7 +663,7 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
             case SQL_WCHAR:
             case SQL_WVARCHAR:
             case SQL_WLONGVARCHAR:
-              bufferSize = (data->parameters[i]->ColumnSize + 1) * sizeof(SQLWCHAR);
+              bufferSize = (SQLSMALLINT)(data->parameters[i]->ColumnSize + 1) * sizeof(SQLWCHAR);
               data->parameters[i]->ValueType = SQL_C_WCHAR;
               data->parameters[i]->ParameterValuePtr = new SQLWCHAR[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
@@ -673,7 +673,7 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
             case SQL_VARCHAR:
             case SQL_LONGVARCHAR:
             default:
-              bufferSize = (data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
+              bufferSize = (SQLSMALLINT)(data->parameters[i]->ColumnSize + 1) * sizeof(SQLCHAR);
               data->parameters[i]->ValueType = SQL_C_CHAR;
               data->parameters[i]->ParameterValuePtr = new SQLCHAR[bufferSize];
               data->parameters[i]->BufferLength = bufferSize;
@@ -687,7 +687,8 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
       // // create the statement to call the stored procedure using the ODBC Call escape sequence:
       // SQLTCHAR callString[255];
       // need to create the string "?,?,?,?" where the number of '?' is the number of parameters;
-      SQLTCHAR parameterString[(data->parameterCount * 2) - 1];
+      // SQLTCHAR parameterString[(data->parameterCount * 2) - 1];
+      SQLTCHAR parameterString[255];
       // TODO: Can maybe add this for loop to the one above.
       for (int i = 0; i < data->parameterCount; i++) {
         if (i == (data->parameterCount - 1)) {
@@ -700,7 +701,7 @@ class CallProcedureAsyncWorker : public Napi::AsyncWorker {
       data->deleteColumns(); // delete data in columns for next result set
 
       data->sql = new SQLTCHAR[255]();
-      sprintf((char *)data->sql, "{ CALL %s (?) }", combinedProcedureName);
+      sprintf((char *)data->sql, "{ CALL %s (%s) }", combinedProcedureName, parameterString);
 
       data->sqlReturnCode = SQLExecDirect(
         data->hSTMT, // StatementHandle
@@ -916,7 +917,7 @@ class TablesAsyncWorker : public Napi::AsyncWorker {
 
     void OnOK() {
 
-      DEBUG_PRINTF("ODBCConnection::QueryAsyncWorker::OnOk : data->sqlReturnCode=%i, \n", data->sqlReturnCode, );
+      DEBUG_PRINTF("ODBCConnection::QueryAsyncWorker::OnOk : data->sqlReturnCode=%i, \n", data->sqlReturnCode );
 
       Napi::Env env = Env();
       Napi::HandleScope scope(env);

@@ -35,7 +35,7 @@ Napi::Value ODBC::Init(Napi::Env env, Napi::Object exports) {
   hEnv = NULL;
   Napi::HandleScope scope(env);
 
-  // Wrap ODBC constants in an object that we can then expand 
+  // Wrap ODBC constants in an object that we can then expand
   std::vector<Napi::PropertyDescriptor> ODBC_CONSTANTS;
 
   ODBC_CONSTANTS.push_back(Napi::PropertyDescriptor::Value("ODBCVER", Napi::Number::New(env, ODBCVER), napi_enumerable));
@@ -762,7 +762,7 @@ Napi::Array ODBC::ProcessDataForNapi(Napi::Env env, QueryData *data) {
   rows.Set(Napi::String::New(env, RETURN), env.Undefined()); // TODO: This doesn't exist on my DBMS of choice, need to test on MSSQL Server or similar
 
   // set the 'count' property
-  rows.Set(Napi::String::New(env, COUNT), Napi::Number::New(env, data->rowCount));
+  rows.Set(Napi::String::New(env, COUNT), Napi::Number::New(env, (double)data->rowCount));
 
   // construct the array for the 'columns' property and then set
   Napi::Array napiColumns = Napi::Array::New(env);

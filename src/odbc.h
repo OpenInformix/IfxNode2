@@ -235,13 +235,15 @@ class ODBC {
 #define DEBUG_TPRINTF(...) (void)0
 #endif
 
-#define ASYNC_WORKER_CHECK_CODE_SET_ERROR_RETURN(returnCode, handletype, handle, context, sqlFunction) ({\
+
+#define ASYNC_WORKER_CHECK_CODE_SET_ERROR_RETURN(returnCode, handletype, handle, context, sqlFunction) \
+{\
   if(!SQL_SUCCEEDED(returnCode)) {\
     char errorString[255];\
     sprintf(errorString, "[Node.js::odbc] %s: Error in ODBC function %s", context, sqlFunction);\
     SetError(ODBC::GetSQLError(handletype, handle, errorString));\
     return;\
   }\
-})
+}
 
 #endif
