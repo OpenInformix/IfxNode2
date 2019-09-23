@@ -389,6 +389,22 @@ Napi::Value ODBC::ConnectSync(const Napi::CallbackInfo& info) {
   );
 
 
+<<<<<<< HEAD
+
+  if (SQL_SUCCEEDED(sqlReturnCode)) {
+
+    HSTMT hStmt;
+
+    //allocate a temporary statment
+    sqlReturnCode = SQLAllocHandle(SQL_HANDLE_STMT, hDBC, &hStmt);
+
+    //try to determine if the driver can handle
+    //multiple recordsets
+    sqlReturnCode = SQLGetFunctions(
+      hDBC,
+      SQL_API_SQLMORERESULTS,
+      &canHaveMoreResults);
+=======
   if (!SQL_SUCCEEDED(sqlReturnCode)) {
     Napi::Error::New(env, ODBC::GetSQLError(SQL_HANDLE_DBC, hDBC)).ThrowAsJavaScriptException();
     uv_mutex_unlock(&ODBC::g_odbcMutex);
@@ -396,6 +412,7 @@ Napi::Value ODBC::ConnectSync(const Napi::CallbackInfo& info) {
   }
 
   HSTMT hStmt;
+>>>>>>> 58a1effa50203f86a7746d01f43b9a5bf21d973d
 
   //allocate a temporary statment
   sqlReturnCode = SQLAllocHandle(SQL_HANDLE_STMT, hDBC, &hStmt);
@@ -435,12 +452,25 @@ Napi::Value ODBC::ConnectSync(const Napi::CallbackInfo& info) {
   }
 
   // return the Connection
+<<<<<<< HEAD
+  else {
+
+    // pass the HENV and HDBC values to the ODBCConnection constructor
+    std::vector<napi_value> connectionArguments;
+    connectionArguments.push_back(Napi::External<SQLHENV>::New(env, &hEnv)); // connectionArguments[0]
+    connectionArguments.push_back(Napi::External<SQLHDBC>::New(env, &hDBC)); // connectionArguments[1]
+
+    // create a new ODBCConnection object as a Napi::Value
+    return ODBCConnection::constructor.New(connectionArguments);
+  }
+=======
   // pass the HENV and HDBC values to the ODBCConnection constructor
   std::vector<napi_value> connectionArguments;
   connectionArguments.push_back(Napi::External<SQLHENV>::New(env, &hEnv)); // connectionArguments[0]
   connectionArguments.push_back(Napi::External<SQLHDBC>::New(env, &hDBC)); // connectionArguments[1]
   // create a new ODBCConnection object as a Napi::Value
   return ODBCConnection::constructor.New(connectionArguments);
+>>>>>>> 58a1effa50203f86a7746d01f43b9a5bf21d973d
 }
 
 ///////////////////////////////////////////////////////////////////////////////
