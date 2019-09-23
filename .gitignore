@@ -8,7 +8,7 @@ core
 oldtest
 .env
 .vscode/
-
+*.orig
 
 
 package-lock.json
@@ -33,4 +33,5 @@ Release/*
 1.*
 tmp.*
 *.tmp
+
 
